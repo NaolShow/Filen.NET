@@ -13,9 +13,10 @@ namespace Filen.API {
         /// </summary>
         [JsonPropertyName("apiKey")] public string ApiKey { get; set; }
         /// <summary>
-        /// Represents the encrypted (as metadata) user's master keys (one for each password changed) used to decrypt metadata
+        /// Represents the user's encrypted master keys (as metadata), those keys are concatenated with the char '|' as separator<br/>
+        /// There is one master key for each password that the account had
         /// </summary>
-        [JsonPropertyName("masterKeys")] public string MasterKeys { get; set; }
+        [JsonPropertyName("masterKeys")] public string EncryptedMasterKeys { get; set; }
         /// <summary>
         /// Represents the user's public RSA key
         /// </summary>
