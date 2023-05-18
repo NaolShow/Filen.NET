@@ -26,9 +26,10 @@ namespace Filen.API {
         /// </summary>
         [JsonPropertyName("email")] public string Email { get; set; }
         /// <summary>
-        /// Determines if the user is premium or not (has already bought any plan or is a free account)
+        /// Determines if the user is premium or not (has already bought any plan or is a free account)<br/>
+        /// (1 for premium, 0 for free account)
         /// </summary>
-        [JsonPropertyName("isPremium")] public bool IsPremium { get; set; }
+        [JsonPropertyName("isPremium")] public int Premium { get; set; }
 
         /// <summary>
         /// Represents the maximum available space in the user's storage (in bytes) 
