@@ -24,6 +24,7 @@ namespace Filen.API {
 
             // By default set the authorization header to null
             SetApiKey("null");
+            HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Filen.NET");
 
         }
 
