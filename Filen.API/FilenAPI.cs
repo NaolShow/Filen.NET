@@ -31,7 +31,7 @@ namespace Filen.API {
         /// <summary>
         /// Sets the specified <paramref name="apiKey"/> in the <see cref="HttpClient"/> default authorization request header
         /// </summary>
-        /// <param name="apiKey">The api key to access Filen API acquired from <see cref="Login(Messages.LoginRequest)"/></param>
+        /// <param name="apiKey">The api key to access Filen API acquired from <see cref="Login(LoginRequest)"/></param>
         public void SetApiKey(string apiKey) => HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
     }
