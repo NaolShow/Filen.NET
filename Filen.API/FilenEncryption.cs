@@ -9,6 +9,46 @@ namespace Filen.API {
     /// </summary>
     public static class FilenEncryption {
 
+        /// <summary>
+        /// Represents available chars for an IV
+        /// </summary>
+        const string IVChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        /// <summary>
+        /// Encrypts the specified metadata string with the specified master key
+        /// </summary>
+        /// <param name="metadata">The metadata to encrypt</param>
+        /// <param name="masterKey">The master key used to encrypt the metadata</param>
+        /// <returns>The encrypted metadata string</returns>
+        public static string EncryptMetadata(string metadata, string masterKey) {
+
+            // Derive the master key and initialize the aes gcm instance
+            byte[] masterKeyBytes = Encoding.UTF8.GetBytes(masterKey);
+            byte[] encryptionKeyBytes = Rfc2898DeriveBytes.Pbkdf2(masterKeyBytes, masterKeyBytes, 1, HashAlgorithmName.SHA512, 32);
+            using AesGcm aesGcm = new AesGcm(encryptionKeyBytes);
+
+            // Generate a cryptographically secure IV and Tag
+            char[] ivChars = new char[12];
+            for (int i = 0; i < ivChars.Length; i++)
+                ivChars[i] = IVChars[RandomNumberGenerator.GetInt32(IVChars.Length)];
+            string ivString = new string(ivChars);
+            byte[] iv = Encoding.UTF8.GetBytes(ivString);
+            byte[] tag = RandomNumberGenerator.GetBytes(16);
+
+            // Encrypt the content
+            byte[] content = Encoding.UTF8.GetBytes(metadata);
+            aesGcm.Encrypt(iv, content, content, tag);
+
+            // Concatenate the encrypted content and the tag
+            byte[] result = new byte[content.Length + tag.Length];
+            Buffer.BlockCopy(content, 0, result, 0, content.Length);
+            Buffer.BlockCopy(tag, 0, result, content.Length, tag.Length);
+
+            // 002 for the metadata version, and then the content/tag encoded in base64
+            return $"002{ivString}{Convert.ToBase64String(result)}";
+
+        }
+
         /// <inheritdoc cref="DecryptMetadata(string, IReadOnlyList{string})"/>
         public static string? DecryptMetadata(string metadata, params string[] masterKeys) => DecryptMetadata(metadata, (IReadOnlyList<string>)masterKeys);
 
@@ -58,6 +98,21 @@ namespace Filen.API {
         /// <param name="masterKey">The user's master key that is used to decrypt the metadata</param>
         /// <returns></returns>
         public static string[]? DecryptMasterKeys(string masterKeys, string masterKey) => DecryptMetadata(masterKeys, masterKey)?.Split('|');
+
+        /// <summary>
+        /// Hashes the specified <paramref name="name"/> with <see cref="SHA512"/> and then <see cref="SHA1"/> and then return it's hex string required for <see cref="DirCreateRequest"/>
+        /// </summary>
+        /// <param name="name">The plain text name that will be hashed</param>
+        /// <returns>Hex encoded string representing the hashed name</returns>
+        public static string HashName(string name) {
+
+            byte[] sha512 = SHA512.HashData(Encoding.UTF8.GetBytes(name.ToLower()));
+            string sha512Hex = Convert.ToHexString(sha512).ToLower();
+
+            byte[] sha1 = SHA1.HashData(Encoding.UTF8.GetBytes(sha512Hex));
+            return Convert.ToHexString(sha1).ToLower();
+
+        }
 
     }
 
