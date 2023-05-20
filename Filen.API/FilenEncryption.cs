@@ -9,8 +9,8 @@ namespace Filen.API {
     /// </summary>
     public static class FilenEncryption {
 
-        /// <inheritdoc cref="DecryptMetadata(string, Span{string})"/>
-        public static string? DecryptMetadata(string metadata, params string[] masterKeys) => DecryptMetadata(metadata, masterKeys.AsSpan());
+        /// <inheritdoc cref="DecryptMetadata(string, IReadOnlyList{string})"/>
+        public static string? DecryptMetadata(string metadata, params string[] masterKeys) => DecryptMetadata(metadata, (IReadOnlyList<string>)masterKeys);
 
         /// <summary>
         /// Tries to decrypt the specified metadata string with all the specified master keys (from the latest to the first one)
@@ -18,8 +18,8 @@ namespace Filen.API {
         /// <param name="metadata">The encrypted metadata string</param>
         /// <param name="masterKeys">The master keys that could have encrypted this metadata</param>
         /// <returns>Decrypted metadata string or null if none of the specified master keys could decrypt it</returns>
-        public static string? DecryptMetadata(string metadata, Span<string> masterKeys) {
-            for (int i = masterKeys.Length - 1; i >= 0; i--) {
+        public static string? DecryptMetadata(string metadata, IReadOnlyList<string> masterKeys) {
+            for (int i = masterKeys.Count - 1; i >= 0; i--) {
 
                 // Derive the master key that is used as the decryption key
                 byte[] masterKeyBytes = Encoding.UTF8.GetBytes(masterKeys[i]);
