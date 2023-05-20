@@ -1,4 +1,5 @@
 ﻿using Filen.API;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace Filen {
@@ -13,10 +14,16 @@ namespace Filen {
         /// <summary>
         /// Determines if we are currently logged into <see href="https://filen.io"/>
         /// </summary>
+        [MemberNotNullWhen(true, nameof(MasterKeys))]
         public bool IsLoggedIn => sessionData != null;
 
         private string? sessionPath;
         private SessionData? sessionData;
+
+        /// <summary>
+        /// Represents the user's master keys that can be used to decrypt metadata (available after <see cref="Login"/>)
+        /// </summary>
+        public IReadOnlyList<string>? MasterKeys => masterKeys;
         private string[]? masterKeys;
 
         /// <summary>
