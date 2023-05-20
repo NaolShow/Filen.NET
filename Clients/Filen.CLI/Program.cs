@@ -1,4 +1,5 @@
 ﻿using Filen.API;
+using System.Text.Json;
 
 namespace Filen.CLI {
 
@@ -43,8 +44,19 @@ namespace Filen.CLI {
             await filenClient.Login();
 
             // Ask for the user informations and write the user's email (with the underlying FilenAPI instance)
-            UserInfoResponse response = await filenClient.FilenAPI.GetUserInfo();
-            Console.WriteLine($"{response.Data.Value.Email}");
+            UserInfoResponse userInfoResponse = await filenClient.FilenAPI.GetUserInfo();
+            Console.WriteLine($"{userInfoResponse.Data.Value.Email}");
+
+            // Get the content of the base folder and write all the folder's name
+            Console.WriteLine($"Folders that are inside your base folder:");
+            DirContentResponse dirContentResponse = await filenClient.FilenAPI.GetDirContent(new DirContentRequest(userInfoResponse.Data.Value.BaseFolderUUID));
+            foreach (FolderData folder in dirContentResponse.Data.Value.Folders) {
+
+                // Decrypt the folder's metadata with the master keys
+                FolderMetadata metadata = JsonSerializer.Deserialize<FolderMetadata>(FilenEncryption.DecryptMetadata(folder.EncryptedMetadata, filenClient.MasterKeys));
+                Console.WriteLine($"- {folder.UUID}: {metadata.Name}");
+
+            }
 
         }
 
