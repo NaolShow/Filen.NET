@@ -15,9 +15,9 @@ namespace Filen.API {
         /// <summary>
         /// Represents the code of the <see cref="DirRenameResponse"/> which could be:<br/>
         /// <br/>
-        /// • invalid_params: Specified <see cref="DirRenameRequest.UUID"/> is not in a correct format<br/>
-        /// • folder_not_found: No folder with the specified <see cref="DirRenameRequest.UUID"/> could be found<br/>
-        /// • folder_renamed: Folder with the specified <see cref="DirRenameRequest.UUID"/> got renamed successfuly<br/>
+        /// • <b>invalid_params</b>: Specified <see cref="DirRenameRequest.UUID"/> is not in a correct format<br/>
+        /// • <b>folder_not_found</b>: No folder with the specified <see cref="DirRenameRequest.UUID"/> could be found<br/>
+        /// • <b>folder_renamed</b>: Folder with the specified <see cref="DirRenameRequest.UUID"/> got renamed successfuly (<see cref="DirCreateData.UUID"/> can differ from <see cref="DirCreateRequest.UUID"/> if a folder with the same name already exists)<br/>
         /// </summary>
         [JsonPropertyName("code")] public string Code { get; set; }
         /// <summary>
