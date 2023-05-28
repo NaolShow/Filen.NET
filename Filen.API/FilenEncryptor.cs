@@ -10,9 +10,18 @@ namespace Filen.API {
     /// </summary>
     public class FilenEncryptor : IDisposable {
 
-        private const int KeySize = 32;
-        private const int IVSize = 12;
-        private const int TagSize = 16;
+        /// <summary>
+        /// Represents the size of the encryption key
+        /// </summary>
+        public const int KeySize = 32;
+        /// <summary>
+        /// Represents the size of the IV which is placed at the beginning of the encrypted data
+        /// </summary>
+        public const int IVSize = 12;
+        /// <summary>
+        /// Represents the size of the Tag which is placed at the end of the encrypted data
+        /// </summary>
+        public const int TagSize = 16;
 
         /// <summary>
         /// Represents the encryption/decryption key bytes<br/>
@@ -49,9 +58,13 @@ namespace Filen.API {
         /// <param name="inputOffset">The offset from which the encrypted data is going to be read</param>
         /// <param name="output">The output buffer that will contain the decrypted data</param>
         /// <param name="outputOffset">The offset from which the decrypted data is going to be stored</param>
-        /// <param name="count">The number of bytes of the content (without IV and Tag)</param>
+        /// <param name="count">The number of bytes of the encrypted content</param>
+        /// <returns>The amount of bytes that has been written into the <paramref name="output"/> buffer from the specified <paramref name="outputOffset"/></returns>
         // Achieving ~2 500 MB/s on my computer with Ryzen 5 5600X, without a single allocation!
-        public void Decrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
+        public int Decrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
+
+            // Substract the IV and the Tag to get the content size
+            count = count - IVSize - TagSize;
 
             // Rent the arrays for the IV, message and tag
             byte[] ivArray = ArrayPool<byte>.Shared.Rent(IVSize);
@@ -77,6 +90,7 @@ namespace Filen.API {
             ArrayPool<byte>.Shared.Return(ivArray);
             ArrayPool<byte>.Shared.Return(messageArray);
             ArrayPool<byte>.Shared.Return(tagArray);
+            return count;
 
         }
 
@@ -85,19 +99,20 @@ namespace Filen.API {
         /// </summary>
         /// <param name="buffer">The buffer that contains the encrypted data with it's IV and Tag</param>
         /// <param name="offset">The offset from which the encrypted data is going to be read and stored</param>
-        /// <param name="count">The number of bytes of the content (without IV and Tag)</param>
-        public void Decrypt(byte[] buffer, int offset, int count) => Decrypt(buffer, offset, buffer, offset, count);
+        /// <inheritdoc cref="Decrypt(byte[], int, byte[], int, int)"/>
+        public int Decrypt(byte[] buffer, int offset, int count) => Decrypt(buffer, offset, buffer, offset, count);
 
         /// <summary>
         /// Encrypts the specified <paramref name="input"/> and sets the encrypted bytes the <paramref name="output"/> buffer (including it's IV and Tag)
         /// </summary>
-        /// <param name="input">The input buffer that contains the data</param>
-        /// <param name="inputOffset">The offset from which the data is going to be read</param>
+        /// <param name="input">The input buffer that contains the unencrypted data</param>
+        /// <param name="inputOffset">The offset from which the unencrypted data is going to be read</param>
         /// <param name="output">The output buffer that will contain the encrypted data</param>
         /// <param name="outputOffset">The offset from which the encrypted data is going to be stored</param>
-        /// <param name="count">The number of bytes of the content (without IV and Tag)</param>
+        /// <param name="count">The number of bytes of the unencrypted content</param>
+        /// <returns>The amount of bytes that has been written into the <paramref name="output"/> buffer from the specified <paramref name="outputOffset"/></returns>
         // Achieving ~2 500 MB/s on my computer with Ryzen 5 5600X, without a single allocation!
-        public void Encrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
+        public int Encrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
 
             // Rent the arrays for the IV and tag
             byte[] ivArray = ArrayPool<byte>.Shared.Rent(IVSize);
@@ -124,16 +139,17 @@ namespace Filen.API {
             ArrayPool<byte>.Shared.Return(ivArray);
             ArrayPool<byte>.Shared.Return(messageArray);
             ArrayPool<byte>.Shared.Return(tagArray);
+            return count + IVSize + TagSize;
 
         }
 
         /// <summary>
         /// Decrypts the specified <paramref name="buffer"/> and sets the decrypted bytes into the same buffer
         /// </summary>
-        /// <param name="buffer">The buffer that contains the encrypted data with it's IV and Tag</param>
-        /// <param name="offset">The offset from which the encrypted data is going to be read and stored</param>
-        /// <param name="count">The number of bytes of the content (without IV and Tag)</param>
-        public void Encrypt(byte[] buffer, int offset, int count) => Encrypt(buffer, offset, buffer, offset, count);
+        /// <param name="buffer">The buffer that contains the unencrypted data</param>
+        /// <param name="offset">The offset from which the data is going to be read and stored</param>
+        /// <inheritdoc cref="Encrypt(byte[], int, byte[], int, int)"/>
+        public int Encrypt(byte[] buffer, int offset, int count) => Encrypt(buffer, offset, buffer, offset, count);
 
         /// <summary>
         /// Disposes the internal <see cref="Key"/> array and <see cref="AesGcm"/> instance
