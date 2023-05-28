@@ -49,7 +49,7 @@ namespace Filen {
                     if (masterKeysResponse.Status) {
 
                         // Try to decrypt the master keys (if not possible then we have the wrong master key so we reconnect)
-                        masterKeys = FilenEncryption.DecryptMasterKeys(masterKeysResponse.Data.Value.EncryptedMasterKeys, sessionData.Value.MasterKey);
+                        masterKeys = FilenHelper.DecryptMasterKeys(masterKeysResponse.Data.Value.EncryptedMasterKeys, sessionData.Value.MasterKey);
                         if (masterKeys != null) return;
 
                     }
@@ -88,7 +88,7 @@ namespace Filen {
             };
 
             // Decrypt the master keys (if the login was successful we must have them, because we have the right key)
-            masterKeys = FilenEncryption.DecryptMasterKeys(loginResponse.Data.Value.EncryptedMasterKeys, sessionData.Value.MasterKey);
+            masterKeys = FilenHelper.DecryptMasterKeys(loginResponse.Data.Value.EncryptedMasterKeys, sessionData.Value.MasterKey);
 
             // If we should store the session data then store it
             if (sessionPath != null) File.WriteAllText(sessionPath, JsonSerializer.Serialize(sessionData, new JsonSerializerOptions() {

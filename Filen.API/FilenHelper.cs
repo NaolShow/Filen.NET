@@ -4,10 +4,10 @@ using System.Text;
 namespace Filen.API {
 
     /// <summary>
-    /// Provides easy way to encrypt and decrypt data received or sent to <see href="https://filen.io"/><br/>
-    /// All of them are described in the <see href="https://cdn.filen.io/whitepaper.pdf"/>
+    /// Provides methods that help to easily transform data that is sent or received from <see href="https://filen.io"/><br/>
+    /// (You can find the specifications of most of the methods in the <see href="https://cdn.filen.io/whitepaper.pdf"/>)
     /// </summary>
-    public static class FilenEncryption {
+    public static class FilenHelper {
 
         /// <summary>
         /// Represents available chars for an IV
