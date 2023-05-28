@@ -11,6 +11,15 @@ namespace Filen.API {
     public class FilenEncryptor : IDisposable {
 
         /// <summary>
+        /// Represents the size of the chunks content (after being decrypted)
+        /// </summary>
+        public const int ChunkSize = 1024 * 1024;
+        /// <summary>
+        /// Represents the size of the encrypted chunks (received from <see href="https://filen.io"/>)
+        /// </summary>
+        public const int EncryptedChunkSize = ChunkSize + IVSize + TagSize;
+
+        /// <summary>
         /// Represents the size of the encryption key
         /// </summary>
         public const int KeySize = 32;
