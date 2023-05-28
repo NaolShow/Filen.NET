@@ -15,6 +15,16 @@ namespace Filen.API {
         const string IVChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         /// <summary>
+        /// Fills the specified array with a cryptographically secure bytes that can be encoded into a readable UTF8 string<br/>
+        /// (This is mostly used to generate IVs that can then be used with <see href="https://filen.io"/>)
+        /// </summary>
+        /// <param name="array">The byte array that will get filled with cryptographically secure bytes</param>
+        public static void Fill(byte[] array, int offset, int count) {
+            for (int i = offset; i < count; i++)
+                array[i] = (byte)IVChars[RandomNumberGenerator.GetInt32(IVChars.Length)];
+        }
+
+        /// <summary>
         /// Encrypts the specified metadata string with the specified master key
         /// </summary>
         /// <param name="metadata">The metadata to encrypt</param>
