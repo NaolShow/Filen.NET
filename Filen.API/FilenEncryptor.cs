@@ -69,36 +69,21 @@ namespace Filen.API {
         /// <param name="outputOffset">The offset from which the decrypted data is going to be stored</param>
         /// <param name="count">The number of bytes of the encrypted content</param>
         /// <returns>The amount of bytes that has been written into the <paramref name="output"/> buffer from the specified <paramref name="outputOffset"/></returns>
-        // Achieving ~2 500 MB/s on my computer with Ryzen 5 5600X, without a single allocation!
+        // Achieving ~3 700 MB/s on my computer with Ryzen 5 5600X, without a single allocation!
         public int Decrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
 
             // Substract the IV and the Tag to get the content size
             count = count - IVSize - TagSize;
 
-            // Rent the arrays for the IV, message and tag
-            byte[] ivArray = ArrayPool<byte>.Shared.Rent(IVSize);
-            byte[] messageArray = ArrayPool<byte>.Shared.Rent(count);
-            byte[] tagArray = ArrayPool<byte>.Shared.Rent(TagSize);
+            // Extract the IV, message and tag from the input
+            Span<byte> iv = input.AsSpan(inputOffset, IVSize);
+            Span<byte> encryptedMessage = input.AsSpan(inputOffset + IVSize, count);
+            Span<byte> tag = input.AsSpan(inputOffset + IVSize + count, TagSize);
 
-            // Copy the data into the arrays
-            Buffer.BlockCopy(input, inputOffset, ivArray, 0, IVSize);
-            Buffer.BlockCopy(input, inputOffset + IVSize, messageArray, 0, count);
-            Buffer.BlockCopy(input, inputOffset + IVSize + count, tagArray, 0, TagSize);
+            Span<byte> decryptedMessage = output.AsSpan(outputOffset, count);
 
-            // Use non allocation Span to only extract a part of the arrays (AesGcm doesn't support buffer offset and count..)
-            // => This is needed because array pool doesn't necessarily give us an array of the requested size
-            Span<byte> iv = ivArray.AsSpan(0, IVSize);
-            Span<byte> message = messageArray.AsSpan(0, count);
-            Span<byte> tag = tagArray.AsSpan(0, TagSize);
-
-            // Decrypt and copy the decrypted data into the input buffer
-            aesGcm.Decrypt(iv, message, tag, message);
-            Buffer.BlockCopy(messageArray, 0, output, outputOffset, count);
-
-            // Return all the arrays
-            ArrayPool<byte>.Shared.Return(ivArray);
-            ArrayPool<byte>.Shared.Return(messageArray);
-            ArrayPool<byte>.Shared.Return(tagArray);
+            // Decrypt and copy the decrypted data into the output buffer
+            aesGcm.Decrypt(iv, encryptedMessage, tag, decryptedMessage);
             return count;
 
         }
@@ -123,32 +108,24 @@ namespace Filen.API {
         // Achieving ~2 500 MB/s on my computer with Ryzen 5 5600X, without a single allocation!
         public int Encrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
 
-            // Rent the arrays for the IV and tag
-            byte[] ivArray = ArrayPool<byte>.Shared.Rent(IVSize);
-            byte[] messageArray = ArrayPool<byte>.Shared.Rent(count);
-            byte[] tagArray = ArrayPool<byte>.Shared.Rent(TagSize);
+            // If both input and output buffers are the same then move the content to not overwrite part of it when generating the IV
+            if (ReferenceEquals(input, output))
+                Buffer.BlockCopy(input, inputOffset, input, inputOffset + IVSize, count);
 
-            // Use non allocation Span to only extract a part of those arrays (see why in the decrypt method)
-            Span<byte> iv = ivArray.AsSpan(0, IVSize);
-            Span<byte> message = messageArray.AsSpan(0, count);
-            Span<byte> tag = tagArray.AsSpan(0, TagSize);
+            // Extract the IV, message and tag from the output
+            Span<byte> iv = output.AsSpan(outputOffset, IVSize);
+            Span<byte> decryptedMessage = input.AsSpan(inputOffset, count);
+            Span<byte> tag = output.AsSpan(outputOffset + IVSize + count, TagSize);
 
-            // Copy the unencrypted data and fill the IV and Tag with cryptographically strong random bytes
-            FilenHelper.Fill(ivArray, 0, IVSize);
-            Buffer.BlockCopy(input, inputOffset, messageArray, 0, count);
+            Span<byte> encryptedMessage = output.AsSpan(outputOffset + IVSize, count);
+
+            // Get a random and cryptographically secure IV and Tag
+            FilenHelper.Fill(output, outputOffset, IVSize);
             RandomNumberGenerator.Fill(tag);
 
             // Encrypt the bytes and copy the IV, encrypted content and Tag into the output buffer
-            aesGcm.Encrypt(iv, message, message, tag);
-            Buffer.BlockCopy(ivArray, 0, output, outputOffset, IVSize);
-            Buffer.BlockCopy(messageArray, 0, output, outputOffset + IVSize, count);
-            Buffer.BlockCopy(tagArray, 0, output, outputOffset + IVSize + count, TagSize);
-
-            // Return all the arrays
-            ArrayPool<byte>.Shared.Return(ivArray);
-            ArrayPool<byte>.Shared.Return(messageArray);
-            ArrayPool<byte>.Shared.Return(tagArray);
-            return count + IVSize + TagSize;
+            aesGcm.Encrypt(iv, decryptedMessage, encryptedMessage, tag);
+            return IVSize + count + TagSize;
 
         }
 
@@ -166,6 +143,7 @@ namespace Filen.API {
         public void Dispose() {
             ArrayPool<byte>.Shared.Return(Key);
             aesGcm.Dispose();
+            GC.SuppressFinalize(this);
         }
 
     }
