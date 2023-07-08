@@ -8,7 +8,7 @@ namespace Filen.API {
     /// Provides methods that help to encrypt and decrypt file chunk data with the <see cref="AesGcm"/> algorithm<br/>
     /// (Without any memory allocation and with fast speed!)
     /// </summary>
-    public class FilenEncryptor : IDisposable {
+    public sealed class FilenEncryptor : IDisposable {
 
         /// <summary>
         /// Represents the size of the chunks content (after being decrypted)
