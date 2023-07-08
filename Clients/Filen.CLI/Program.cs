@@ -53,7 +53,7 @@ namespace Filen.CLI {
             foreach (FolderData folder in dirContentResponse.Data.Value.Folders) {
 
                 // Decrypt the folder's metadata with the master keys
-                FolderMetadata metadata = JsonSerializer.Deserialize<FolderMetadata>(FilenEncryption.DecryptMetadata(folder.EncryptedMetadata, filenClient.MasterKeys));
+                FolderMetadata metadata = JsonSerializer.Deserialize<FolderMetadata>(FilenHelper.DecryptMetadata(folder.EncryptedMetadata, filenClient.MasterKeys));
                 Console.WriteLine($"- {folder.UUID}: {metadata.Name}");
 
             }
