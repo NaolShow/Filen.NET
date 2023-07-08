@@ -109,8 +109,10 @@ namespace Filen.API {
         public int Encrypt(byte[] input, int inputOffset, byte[] output, int outputOffset, int count) {
 
             // If both input and output buffers are the same then move the content to not overwrite part of it when generating the IV
-            if (ReferenceEquals(input, output))
+            if (ReferenceEquals(input, output)) {
                 Buffer.BlockCopy(input, inputOffset, input, inputOffset + IVSize, count);
+                inputOffset += IVSize;
+            }
 
             // Extract the IV, message and tag from the output
             Span<byte> iv = output.AsSpan(outputOffset, IVSize);
