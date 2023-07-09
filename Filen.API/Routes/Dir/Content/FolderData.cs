@@ -60,6 +60,8 @@ namespace Filen.API {
         /// </summary>
         [JsonPropertyName("name")] public string Name { get; set; }
 
+        public override string ToString() => JsonSerializer.Serialize(this);
+
     }
 
 }

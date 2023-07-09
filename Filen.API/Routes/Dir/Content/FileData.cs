@@ -35,7 +35,7 @@ namespace Filen.API {
         /// </summary>
         [JsonPropertyName("chunks")] public int Chunks { get; set; }
         /// <summary>
-        /// Represents the total size of the file
+        /// Represents the total size of the file (is not valid when <see cref="FileData"/> is acquired through <see cref="FilenAPI.FileVersions(FileVersionsRequest)"/>)
         /// </summary>
         [JsonPropertyName("size")] public long Size { get; set; }
 
@@ -49,7 +49,7 @@ namespace Filen.API {
         [JsonPropertyName("rm")] public string RM { get; set; }
 
         /// <summary>
-        /// Determines the file's parent UUID
+        /// Determines the file's parent UUID (is not valid when <see cref="FileData"/> is acquired through <see cref="FilenAPI.FileVersions(FileVersionsRequest)"/>)
         /// </summary>
         [JsonPropertyName("parent")] public string Parent { get; set; }
         /// <summary>
@@ -58,7 +58,7 @@ namespace Filen.API {
         /// </summary>
         [JsonPropertyName("timestamp")] public long Timestamp { get; set; }
         /// <summary>
-        /// Determines if the file is favorited or not
+        /// Determines if the file is favorited or not (is not valid when <see cref="FileData"/> is acquired through <see cref="FilenAPI.FileVersions(FileVersionsRequest)"/>)
         /// </summary>
         [JsonPropertyName("favorited")] public int Favorited { get; set; }
 
@@ -75,7 +75,9 @@ namespace Filen.API {
         /// Represents the name of the file
         /// </summary>
         [JsonPropertyName("name")] public string Name { get; set; }
-        /// <inheritdoc cref="FileData.Size"/>
+        /// <summary>
+        /// Represents the total size of the file
+        /// </summary>
         [JsonPropertyName("size")] public long Size { get; set; }
         /// <summary>
         /// Represents the mime type of the file ('video/mp4', ...)
@@ -92,6 +94,8 @@ namespace Filen.API {
         /// (Use <see cref="DateTimeOffset.FromUnixTimeMilliseconds(long)"/> to get the actual date)
         /// </summary>
         [JsonPropertyName("lastModified")] public long LastModified { get; set; }
+
+        public override string ToString() => JsonSerializer.Serialize(this);
 
     }
 
